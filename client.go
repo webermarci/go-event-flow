@@ -14,10 +14,11 @@ type ClientConfig struct {
 }
 
 type Client struct {
+	name       string
 	mqttClient mqtt.Client
 }
 
-func NewClient(config ClientConfig) *Client {
+func NewClient(name string, config ClientConfig) *Client {
 	mqttConfig := mqtt.NewClientOptions()
 	mqttConfig.SetKeepAlive(3 * time.Second)
 	mqttConfig.SetAutoReconnect(true)
@@ -43,6 +44,7 @@ func NewClient(config ClientConfig) *Client {
 	mqttClient := mqtt.NewClient(mqttConfig)
 
 	return &Client{
+		name:       name,
 		mqttClient: mqttClient,
 	}
 }

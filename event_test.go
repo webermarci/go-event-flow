@@ -6,7 +6,7 @@ import (
 )
 
 func TestSubscription(t *testing.T) {
-	client := NewClient(ClientConfig{
+	client := NewClient(t.Name(), ClientConfig{
 		URL: "tcp://test.mosquitto.org:1883",
 	})
 
@@ -18,19 +18,19 @@ func TestSubscription(t *testing.T) {
 
 	var eventType EventType = "emq/test/" + EventType(t.Name())
 
-	listener := NewEventListener[int](client, eventType, AtLeastOnce)
+	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
 
-	if _, err := listener.Subscribe(); err != nil {
+	if _, err := flow.Subscribe(); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := listener.Unsubscribe(); err != nil {
+	if err := flow.Unsubscribe(); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestSubscriptionWithoutConnection(t *testing.T) {
-	client := NewClient(ClientConfig{
+	client := NewClient(t.Name(), ClientConfig{
 		URL: "",
 	})
 
@@ -40,15 +40,15 @@ func TestSubscriptionWithoutConnection(t *testing.T) {
 
 	var eventType EventType = "emq/test/" + EventType(t.Name())
 
-	listener := NewEventListener[int](client, eventType, AtLeastOnce)
+	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
 
-	if _, err := listener.Subscribe(); err == nil {
+	if _, err := flow.Subscribe(); err == nil {
 		t.Fatal("expected error")
 	}
 }
 
 func TestUnsubscribtionWithoutConnection(t *testing.T) {
-	client := NewClient(ClientConfig{
+	client := NewClient(t.Name(), ClientConfig{
 		URL: "",
 	})
 
@@ -58,15 +58,15 @@ func TestUnsubscribtionWithoutConnection(t *testing.T) {
 
 	var eventType EventType = "emq/test/" + EventType(t.Name())
 
-	listener := NewEventListener[int](client, eventType, AtLeastOnce)
+	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
 
-	if err := listener.Unsubscribe(); err == nil {
+	if err := flow.Unsubscribe(); err == nil {
 		t.Fatal("expected error")
 	}
 }
 
 func TestPublishing(t *testing.T) {
-	client := NewClient(ClientConfig{
+	client := NewClient(t.Name(), ClientConfig{
 		URL: "tcp://test.mosquitto.org:1883",
 	})
 
@@ -78,15 +78,15 @@ func TestPublishing(t *testing.T) {
 
 	var eventType EventType = "emq/test/" + EventType(t.Name())
 
-	listener := NewEventListener[int](client, eventType, AtLeastOnce)
+	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
 
-	if err := listener.Publish(42); err != nil {
+	if err := flow.Publish(42); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestPublishingWithoutConnection(t *testing.T) {
-	client := NewClient(ClientConfig{
+	client := NewClient(t.Name(), ClientConfig{
 		URL: "",
 	})
 
@@ -96,15 +96,15 @@ func TestPublishingWithoutConnection(t *testing.T) {
 
 	var eventType EventType = "emq/test/" + EventType(t.Name())
 
-	listener := NewEventListener[int](client, eventType, AtLeastOnce)
+	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
 
-	if err := listener.Publish(42); err == nil {
+	if err := flow.Publish(42); err == nil {
 		t.Fatal("error expected")
 	}
 }
 
 func TestListening(t *testing.T) {
-	client := NewClient(ClientConfig{
+	client := NewClient(t.Name(), ClientConfig{
 		URL: "tcp://test.mosquitto.org:1883",
 	})
 
@@ -116,21 +116,21 @@ func TestListening(t *testing.T) {
 
 	var eventType EventType = "emq/test/" + EventType(t.Name())
 
-	listener := NewEventListener[int](client, eventType, AtLeastOnce)
+	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
 
-	channel, err := listener.Subscribe()
+	channel, err := flow.Subscribe()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	defer func() {
-		if err := listener.Unsubscribe(); err != nil {
+		if err := flow.Unsubscribe(); err != nil {
 			t.Fatal(err)
 		}
 	}()
 
 	go func() {
-		if err := listener.Publish(42); err != nil {
+		if err := flow.Publish(42); err != nil {
 			t.Fail()
 		}
 	}()
@@ -147,7 +147,7 @@ func TestListening(t *testing.T) {
 }
 
 func TestPublishingInvalidStruct(t *testing.T) {
-	client := NewClient(ClientConfig{
+	client := NewClient(t.Name(), ClientConfig{
 		URL: "tcp://test.mosquitto.org:1883",
 	})
 
@@ -163,9 +163,9 @@ func TestPublishingInvalidStruct(t *testing.T) {
 		Channel chan int `json:"channel"`
 	}
 
-	listener := NewEventListener[Invalid](client, eventType, AtLeastOnce)
+	flow := NewEventFlow[Invalid](client, eventType, AtLeastOnce)
 
-	if err := listener.Publish(Invalid{Channel: make(chan int)}); err == nil {
+	if err := flow.Publish(Invalid{Channel: make(chan int)}); err == nil {
 		t.Fatal("expected error")
 	}
 }
