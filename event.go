@@ -52,7 +52,7 @@ func NewEventFlow[T any](client *Client, eventType EventType, qos QoS) *EventFlo
 }
 
 func (flow *EventFlow[T]) Subscribe() (chan Event[T], error) {
-	channel := make(chan Event[T])
+	channel := make(chan Event[T], 10)
 
 	token := flow.client.mqttClient.Subscribe(string(flow.eventType), byte(flow.qos), func(c mqtt.Client, m mqtt.Message) {
 		var event Event[T]
