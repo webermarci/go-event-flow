@@ -33,19 +33,19 @@ func NewClient(name string, config ClientConfig) *Client {
 		log.Warn().
 			Err(err).
 			Str("client", name).
-			Msg("MQTT client connection lost")
+			Msg("mqtt client connection lost")
 	})
 
 	mqttConfig.SetReconnectingHandler(func(c mqtt.Client, co *mqtt.ClientOptions) {
 		log.Info().
 			Str("client", name).
-			Msg("MQTT client is trying to reconnect")
+			Msg("mqtt client is trying to reconnect")
 	})
 
 	mqttConfig.SetOnConnectHandler(func(c mqtt.Client) {
 		log.Info().
 			Str("client", name).
-			Msg("MQTT client is connected")
+			Msg("mqtt client is connected")
 	})
 
 	mqttClient := mqtt.NewClient(mqttConfig)
@@ -63,7 +63,7 @@ func (client *Client) Connect() error {
 	if token.Error() != nil {
 		log.Warn().Err(token.Error()).
 			Str("client", client.name).
-			Msg("MQTT client failed to connect")
+			Msg("mqtt client failed to connect")
 		return token.Error()
 	}
 
@@ -74,5 +74,5 @@ func (client *Client) Disconnect() {
 	client.mqttClient.Disconnect(1000)
 	log.Info().
 		Str("client", client.name).
-		Msg("MQTT client is disconnected")
+		Msg("mqtt client is disconnected")
 }

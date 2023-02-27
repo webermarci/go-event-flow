@@ -55,11 +55,6 @@ func (flow *EventFlow[T]) Subscribe() (chan Event[T], error) {
 	channel := make(chan Event[T])
 
 	token := flow.client.mqttClient.Subscribe(string(flow.eventType), byte(flow.qos), func(c mqtt.Client, m mqtt.Message) {
-		log.Info().
-			Str("client", flow.client.name).
-			Str("topic", string(flow.eventType)).
-			Msg("Event flow received an event")
-
 		var event Event[T]
 
 		err := json.Unmarshal(m.Payload(), &event)
@@ -67,9 +62,16 @@ func (flow *EventFlow[T]) Subscribe() (chan Event[T], error) {
 			log.Error().
 				Err(err).
 				Str("client", flow.client.name).
-				Msg("Failed to unmarshal event from json")
+				Msg("failed to unmarshal event from json")
 			return
 		}
+
+		log.Info().
+			Time("timestamp", event.Timestamp).
+			Str("uuid", event.UUID).
+			Str("client", flow.client.name).
+			Str("event_type", string(flow.eventType)).
+			Msg("event flow received an event")
 
 		channel <- event
 	})
@@ -80,15 +82,15 @@ func (flow *EventFlow[T]) Subscribe() (chan Event[T], error) {
 		log.Warn().
 			Err(token.Error()).
 			Str("client", flow.client.name).
-			Str("topic", string(flow.eventType)).
-			Msg("Event flow failed to subscribe")
+			Str("event_type", string(flow.eventType)).
+			Msg("event flow failed to subscribe")
 		return nil, token.Error()
 	}
 
 	log.Info().
 		Str("client", flow.client.name).
-		Str("topic", string(flow.eventType)).
-		Msg("Event flow subscribed")
+		Str("event_type", string(flow.eventType)).
+		Msg("event flow subscribed")
 
 	return channel, nil
 }
@@ -102,15 +104,15 @@ func (flow *EventFlow[T]) Unsubscribe() error {
 		log.Warn().
 			Err(token.Error()).
 			Str("client", flow.client.name).
-			Str("topic", string(flow.eventType)).
-			Msg("Event flow failed to unsubscribe")
+			Str("event_type", string(flow.eventType)).
+			Msg("event flow failed to unsubscribe")
 		return token.Error()
 	}
 
 	log.Info().
 		Str("client", flow.client.name).
-		Str("topic", string(flow.eventType)).
-		Msg("Event flow unsubscribed")
+		Str("event_type", string(flow.eventType)).
+		Msg("event flow unsubscribed")
 
 	return nil
 }
@@ -122,8 +124,10 @@ func (flow *EventFlow[T]) Publish(payload T) error {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Time("timestamp", event.Timestamp).
+			Str("uuid", event.UUID).
 			Str("client", flow.client.name).
-			Msg("Failed to marshal the event to json")
+			Msg("failed to marshal the event to json")
 		return err
 	}
 
@@ -134,16 +138,20 @@ func (flow *EventFlow[T]) Publish(payload T) error {
 	if token.Error() != nil {
 		log.Warn().
 			Err(token.Error()).
+			Time("timestamp", event.Timestamp).
+			Str("uuid", event.UUID).
 			Str("client", flow.client.name).
-			Str("topic", string(flow.eventType)).
-			Msg("Event flow failed to publish")
+			Str("event_type", string(flow.eventType)).
+			Msg("event flow failed to publish")
 		return token.Error()
 	}
 
 	log.Info().
+		Time("timestamp", event.Timestamp).
+		Str("uuid", event.UUID).
 		Str("client", flow.client.name).
-		Str("topic", string(flow.eventType)).
-		Msg("Event flow published")
+		Str("event_type", string(flow.eventType)).
+		Msg("event flow published")
 
 	return nil
 }
