@@ -1,6 +1,7 @@
 package eventFlow
 
 import (
+	"sync"
 	"testing"
 	"time"
 )
@@ -118,10 +119,11 @@ func TestListening(t *testing.T) {
 
 	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
 
-	received := false
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 
 	if err := flow.Subscribe(func(event Event[int]) {
-		received = true
+		wg.Done()
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -138,10 +140,17 @@ func TestListening(t *testing.T) {
 		}
 	}()
 
-	time.Sleep(500 * time.Millisecond)
+	wgChannel := make(chan struct{})
 
-	if !received {
-		t.Fatal("not received")
+	go func() {
+		defer close(wgChannel)
+		wg.Wait()
+	}()
+
+	select {
+	case <-wgChannel:
+	case <-time.After(3 * time.Second):
+		t.Fatal("timeout")
 	}
 }
 
