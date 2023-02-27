@@ -56,6 +56,7 @@ func (flow *EventFlow[T]) Subscribe() (chan Event[T], error) {
 
 	token := flow.client.mqttClient.Subscribe(string(flow.eventType), byte(flow.qos), func(c mqtt.Client, m mqtt.Message) {
 		log.Info().
+			Str("client", flow.client.name).
 			Str("topic", string(flow.eventType)).
 			Msg("Event flow received an event")
 
@@ -63,7 +64,10 @@ func (flow *EventFlow[T]) Subscribe() (chan Event[T], error) {
 
 		err := json.Unmarshal(m.Payload(), &event)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to unmarshal event from json")
+			log.Error().
+				Err(err).
+				Str("client", flow.client.name).
+				Msg("Failed to unmarshal event from json")
 			return
 		}
 
@@ -75,12 +79,14 @@ func (flow *EventFlow[T]) Subscribe() (chan Event[T], error) {
 	if token.Error() != nil {
 		log.Warn().
 			Err(token.Error()).
+			Str("client", flow.client.name).
 			Str("topic", string(flow.eventType)).
 			Msg("Event flow failed to subscribe")
 		return nil, token.Error()
 	}
 
 	log.Info().
+		Str("client", flow.client.name).
 		Str("topic", string(flow.eventType)).
 		Msg("Event flow subscribed")
 
@@ -95,12 +101,14 @@ func (flow *EventFlow[T]) Unsubscribe() error {
 	if token.Error() != nil {
 		log.Warn().
 			Err(token.Error()).
+			Str("client", flow.client.name).
 			Str("topic", string(flow.eventType)).
 			Msg("Event flow failed to unsubscribe")
 		return token.Error()
 	}
 
 	log.Info().
+		Str("client", flow.client.name).
 		Str("topic", string(flow.eventType)).
 		Msg("Event flow unsubscribed")
 
@@ -112,7 +120,10 @@ func (flow *EventFlow[T]) Publish(payload T) error {
 
 	bytes, err := json.Marshal(event)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to marshal the event to json")
+		log.Error().
+			Err(err).
+			Str("client", flow.client.name).
+			Msg("Failed to marshal the event to json")
 		return err
 	}
 
@@ -123,12 +134,14 @@ func (flow *EventFlow[T]) Publish(payload T) error {
 	if token.Error() != nil {
 		log.Warn().
 			Err(token.Error()).
+			Str("client", flow.client.name).
 			Str("topic", string(flow.eventType)).
 			Msg("Event flow failed to publish")
 		return token.Error()
 	}
 
 	log.Info().
+		Str("client", flow.client.name).
 		Str("topic", string(flow.eventType)).
 		Msg("Event flow published")
 

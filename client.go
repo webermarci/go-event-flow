@@ -30,15 +30,22 @@ func NewClient(name string, config ClientConfig) *Client {
 	mqttConfig.SetPassword(config.Password)
 
 	mqttConfig.SetConnectionLostHandler(func(c mqtt.Client, err error) {
-		log.Warn().Err(err).Msg("MQTT client connection lost")
+		log.Warn().
+			Err(err).
+			Str("client", name).
+			Msg("MQTT client connection lost")
 	})
 
 	mqttConfig.SetReconnectingHandler(func(c mqtt.Client, co *mqtt.ClientOptions) {
-		log.Info().Msg("MQTT client is trying to reconnect")
+		log.Info().
+			Str("client", name).
+			Msg("MQTT client is trying to reconnect")
 	})
 
 	mqttConfig.SetOnConnectHandler(func(c mqtt.Client) {
-		log.Info().Msg("MQTT client is connected")
+		log.Info().
+			Str("client", name).
+			Msg("MQTT client is connected")
 	})
 
 	mqttClient := mqtt.NewClient(mqttConfig)
@@ -54,7 +61,9 @@ func (client *Client) Connect() error {
 	token.Wait()
 
 	if token.Error() != nil {
-		log.Warn().Err(token.Error()).Msg("MQTT client failed to connect")
+		log.Warn().Err(token.Error()).
+			Str("client", client.name).
+			Msg("MQTT client failed to connect")
 		return token.Error()
 	}
 
@@ -63,5 +72,7 @@ func (client *Client) Connect() error {
 
 func (client *Client) Disconnect() {
 	client.mqttClient.Disconnect(1000)
-	log.Info().Msg("MQTT client is disconnected")
+	log.Info().
+		Str("client", client.name).
+		Msg("MQTT client is disconnected")
 }
