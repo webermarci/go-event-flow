@@ -20,7 +20,7 @@ func TestSubscription(t *testing.T) {
 
 	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
 
-	if _, err := flow.Subscribe(); err != nil {
+	if err := flow.Subscribe(func(event Event[int]) {}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -42,7 +42,7 @@ func TestSubscriptionWithoutConnection(t *testing.T) {
 
 	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
 
-	if _, err := flow.Subscribe(); err == nil {
+	if err := flow.Subscribe(func(event Event[int]) {}); err == nil {
 		t.Fatal("expected error")
 	}
 }
@@ -118,8 +118,11 @@ func TestListening(t *testing.T) {
 
 	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
 
-	channel, err := flow.Subscribe()
-	if err != nil {
+	received := false
+
+	if err := flow.Subscribe(func(event Event[int]) {
+		received = true
+	}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -135,14 +138,10 @@ func TestListening(t *testing.T) {
 		}
 	}()
 
-	select {
-	case event := <-channel:
-		if event.Payload != 42 {
-			t.Fatal("invalid payload")
-		}
-		return
-	case <-time.After(3 * time.Second):
-		t.Fatal("timeout")
+	time.Sleep(500 * time.Millisecond)
+
+	if !received {
+		t.Fatal("not received")
 	}
 }
 

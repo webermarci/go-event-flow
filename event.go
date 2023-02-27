@@ -51,9 +51,7 @@ func NewEventFlow[T any](client *Client, eventType EventType, qos QoS) *EventFlo
 	}
 }
 
-func (flow *EventFlow[T]) Subscribe() (chan Event[T], error) {
-	channel := make(chan Event[T], 10)
-
+func (flow *EventFlow[T]) Subscribe(callback func(event Event[T])) error {
 	token := flow.client.mqttClient.Subscribe(string(flow.eventType), byte(flow.qos), func(c mqtt.Client, m mqtt.Message) {
 		var event Event[T]
 
@@ -73,7 +71,7 @@ func (flow *EventFlow[T]) Subscribe() (chan Event[T], error) {
 			Str("event_type", string(flow.eventType)).
 			Msg("event flow received an event")
 
-		channel <- event
+		callback(event)
 	})
 
 	token.Wait()
@@ -84,7 +82,7 @@ func (flow *EventFlow[T]) Subscribe() (chan Event[T], error) {
 			Str("client", flow.client.name).
 			Str("event_type", string(flow.eventType)).
 			Msg("event flow failed to subscribe")
-		return nil, token.Error()
+		return token.Error()
 	}
 
 	log.Info().
@@ -92,7 +90,7 @@ func (flow *EventFlow[T]) Subscribe() (chan Event[T], error) {
 		Str("event_type", string(flow.eventType)).
 		Msg("event flow subscribed")
 
-	return channel, nil
+	return nil
 }
 
 func (flow *EventFlow[T]) Unsubscribe() error {
