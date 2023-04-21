@@ -23,18 +23,31 @@ type Event[T any] struct {
 	UUID      string    `json:"uuid"`
 	Timestamp time.Time `json:"timestamp"`
 	EventType EventType `json:"event_type"`
+	Error     error     `json:"error"`
 	Triggerer string    `json:"triggerer"`
 	Payload   T         `json:"payload"`
 }
 
-func NewEvent[T any](triggerer string, eventType EventType, payload T) *Event[T] {
+func NewEvent[T any](triggerer string, eventType EventType, payload T, err error) *Event[T] {
 	return &Event[T]{
 		UUID:      uuid.NewString(),
 		Timestamp: time.Now(),
 		EventType: eventType,
+		Error:     err,
 		Triggerer: triggerer,
 		Payload:   payload,
 	}
+}
+
+func (e *Event[T]) IsSuccessful() bool {
+	return e.Error == nil
+}
+
+func (e *Event[T]) errorString() string {
+	if e.Error == nil {
+		return ""
+	}
+	return e.Error.Error()
 }
 
 type EventFlow[T any] struct {
@@ -115,8 +128,8 @@ func (flow *EventFlow[T]) Unsubscribe() error {
 	return nil
 }
 
-func (flow *EventFlow[T]) Publish(payload T) error {
-	event := NewEvent(flow.client.name, flow.eventType, payload)
+func (flow *EventFlow[T]) Publish(payload T, err error) error {
+	event := NewEvent(flow.client.name, flow.eventType, payload, err)
 
 	bytes, err := json.Marshal(event)
 	if err != nil {
@@ -140,7 +153,8 @@ func (flow *EventFlow[T]) Publish(payload T) error {
 			Str("uuid", event.UUID).
 			Str("client", flow.client.name).
 			Str("event_type", string(flow.eventType)).
-			Msg("event flow failed to publish")
+			Str("error", event.errorString()).
+			Msg("event flow failed to publish an event")
 		return token.Error()
 	}
 
@@ -149,7 +163,8 @@ func (flow *EventFlow[T]) Publish(payload T) error {
 		Str("uuid", event.UUID).
 		Str("client", flow.client.name).
 		Str("event_type", string(flow.eventType)).
-		Msg("event flow published")
+		Str("error", event.errorString()).
+		Msg("event flow published an event")
 
 	return nil
 }

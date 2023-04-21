@@ -72,7 +72,7 @@ func (client *Client) Connect() error {
 
 func (client *Client) Disconnect() {
 	client.mqttClient.Disconnect(1000)
-	log.Info().
+	log.Warn().
 		Str("client", client.name).
 		Msg("mqtt client is disconnected")
 }
