@@ -11,7 +11,7 @@ type ClientConfig struct {
 	URL              string
 	Username         string
 	Password         string
-	OnConnectHandler func(c mqtt.Client)
+	OnConnectHandler func()
 }
 
 type Client struct {
@@ -44,7 +44,7 @@ func NewClient(name string, config ClientConfig) *Client {
 	})
 
 	mqttConfig.SetOnConnectHandler(func(c mqtt.Client) {
-		config.OnConnectHandler(c)
+		config.OnConnectHandler()
 		log.Info().
 			Str("client", name).
 			Msg("mqtt client is connected")
