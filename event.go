@@ -54,7 +54,7 @@ type EventFlow[T any] struct {
 	client    *Client
 	eventType EventType
 	qos       QoS
-	Callback  func(event Event[T]) error
+	Callback  func(event Event[T])
 }
 
 func NewEventFlow[T any](client *Client, eventType EventType, qos QoS) *EventFlow[T] {
@@ -62,7 +62,7 @@ func NewEventFlow[T any](client *Client, eventType EventType, qos QoS) *EventFlo
 		client:    client,
 		eventType: eventType,
 		qos:       qos,
-		Callback:  func(event Event[T]) error { return nil },
+		Callback:  func(event Event[T]) {},
 	}
 }
 
