@@ -37,7 +37,9 @@ func TestSubscription(t *testing.T) {
 
 	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
 
-	if err := flow.Subscribe(func(event Event[int]) {}); err != nil {
+	flow.Callback = func(event Event[int]) error { return nil }
+
+	if err := flow.Subscribe(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -59,7 +61,9 @@ func TestSubscriptionWithoutConnection(t *testing.T) {
 
 	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
 
-	if err := flow.Subscribe(func(event Event[int]) {}); err == nil {
+	flow.Callback = func(event Event[int]) error { return nil }
+
+	if err := flow.Subscribe(); err == nil {
 		t.Fatal("expected error")
 	}
 }
@@ -153,14 +157,17 @@ func TestListening(t *testing.T) {
 
 	var eventType EventType = "emq/test/" + EventType(t.Name())
 
-	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
-
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 
-	if err := flow.Subscribe(func(event Event[int]) {
+	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
+
+	flow.Callback = func(event Event[int]) error {
 		wg.Done()
-	}); err != nil {
+		return nil
+	}
+
+	if err := flow.Subscribe(); err != nil {
 		t.Fatal(err)
 	}
 

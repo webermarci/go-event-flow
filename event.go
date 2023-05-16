@@ -54,6 +54,7 @@ type EventFlow[T any] struct {
 	client    *Client
 	eventType EventType
 	qos       QoS
+	Callback  func(event Event[T]) error
 }
 
 func NewEventFlow[T any](client *Client, eventType EventType, qos QoS) *EventFlow[T] {
@@ -61,10 +62,11 @@ func NewEventFlow[T any](client *Client, eventType EventType, qos QoS) *EventFlo
 		client:    client,
 		eventType: eventType,
 		qos:       qos,
+		Callback:  func(event Event[T]) error { return nil },
 	}
 }
 
-func (flow *EventFlow[T]) Subscribe(callback func(event Event[T])) error {
+func (flow *EventFlow[T]) Subscribe() error {
 	token := flow.client.mqttClient.Subscribe(string(flow.eventType), byte(flow.qos), func(c mqtt.Client, m mqtt.Message) {
 		var event Event[T]
 
@@ -84,7 +86,7 @@ func (flow *EventFlow[T]) Subscribe(callback func(event Event[T])) error {
 			Str("event_type", string(flow.eventType)).
 			Msg("event flow received an event")
 
-		callback(event)
+		flow.Callback(event)
 	})
 
 	token.Wait()
