@@ -54,7 +54,7 @@ type EventFlow[T any] struct {
 	client    *Client
 	eventType EventType
 	qos       QoS
-	Callback  func(event Event[T])
+	callback  func(event Event[T])
 }
 
 func NewEventFlow[T any](client *Client, eventType EventType, qos QoS) *EventFlow[T] {
@@ -62,8 +62,12 @@ func NewEventFlow[T any](client *Client, eventType EventType, qos QoS) *EventFlo
 		client:    client,
 		eventType: eventType,
 		qos:       qos,
-		Callback:  func(event Event[T]) {},
+		callback:  func(event Event[T]) {},
 	}
+}
+
+func (flow *EventFlow[T]) SetCallback(callback func(event Event[T])) {
+	flow.callback = callback
 }
 
 func (flow *EventFlow[T]) Subscribe() error {
@@ -86,7 +90,7 @@ func (flow *EventFlow[T]) Subscribe() error {
 			Str("event_type", string(flow.eventType)).
 			Msg("event flow received an event")
 
-		flow.Callback(event)
+		flow.callback(event)
 	})
 
 	token.Wait()
