@@ -44,10 +44,10 @@ func (c *Client) Configure(config ClientConfig) *Client {
 	})
 
 	mqttConfig.SetOnConnectHandler(func(c mqtt.Client) {
+		log.Info().Msg("mqtt client is connected")
 		if config.OnConnectHandler != nil {
 			config.OnConnectHandler()
 		}
-		log.Info().Msg("mqtt client is connected")
 	})
 
 	c.mqttClient = mqtt.NewClient(mqttConfig)
