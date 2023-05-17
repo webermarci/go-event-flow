@@ -52,12 +52,13 @@ func (e *Event[T]) errorString() string {
 
 type EventFlow[T any] struct {
 	client    *Client
+	triggerer string
 	eventType EventType
 	qos       QoS
 	callback  func(event Event[T])
 }
 
-func NewEventFlow[T any](client *Client, eventType EventType, qos QoS) *EventFlow[T] {
+func NewEventFlow[T any](client *Client, triggerer string, eventType EventType, qos QoS) *EventFlow[T] {
 	return &EventFlow[T]{
 		client:    client,
 		eventType: eventType,
@@ -78,7 +79,7 @@ func (flow *EventFlow[T]) Subscribe() error {
 		if err != nil {
 			log.Error().
 				Err(err).
-				Str("client", flow.client.name).
+				Str("triggerer", flow.triggerer).
 				Msg("failed to unmarshal event from json")
 			return
 		}
@@ -86,7 +87,7 @@ func (flow *EventFlow[T]) Subscribe() error {
 		log.Info().
 			Time("timestamp", event.Timestamp).
 			Str("id", event.ID).
-			Str("client", flow.client.name).
+			Str("triggerer", flow.triggerer).
 			Str("event_type", string(flow.eventType)).
 			Msg("event flow received an event")
 
@@ -98,14 +99,14 @@ func (flow *EventFlow[T]) Subscribe() error {
 	if token.Error() != nil {
 		log.Warn().
 			Err(token.Error()).
-			Str("client", flow.client.name).
+			Str("triggerer", flow.triggerer).
 			Str("event_type", string(flow.eventType)).
 			Msg("event flow failed to subscribe")
 		return token.Error()
 	}
 
 	log.Info().
-		Str("client", flow.client.name).
+		Str("triggerer", flow.triggerer).
 		Str("event_type", string(flow.eventType)).
 		Msg("event flow subscribed")
 
@@ -120,14 +121,14 @@ func (flow *EventFlow[T]) Unsubscribe() error {
 	if token.Error() != nil {
 		log.Warn().
 			Err(token.Error()).
-			Str("client", flow.client.name).
+			Str("triggerer", flow.triggerer).
 			Str("event_type", string(flow.eventType)).
 			Msg("event flow failed to unsubscribe")
 		return token.Error()
 	}
 
 	log.Info().
-		Str("client", flow.client.name).
+		Str("triggerer", flow.triggerer).
 		Str("event_type", string(flow.eventType)).
 		Msg("event flow unsubscribed")
 
@@ -135,7 +136,7 @@ func (flow *EventFlow[T]) Unsubscribe() error {
 }
 
 func (flow *EventFlow[T]) Publish(payload T, err error) error {
-	event := NewEvent(flow.client.name, flow.eventType, payload, err)
+	event := NewEvent(flow.triggerer, flow.eventType, payload, err)
 
 	bytes, err := json.Marshal(event)
 	if err != nil {
@@ -143,7 +144,7 @@ func (flow *EventFlow[T]) Publish(payload T, err error) error {
 			Err(err).
 			Time("timestamp", event.Timestamp).
 			Str("id", event.ID).
-			Str("client", flow.client.name).
+			Str("triggerer", flow.triggerer).
 			Msg("failed to marshal the event to json")
 		return err
 	}
@@ -157,7 +158,7 @@ func (flow *EventFlow[T]) Publish(payload T, err error) error {
 			Err(token.Error()).
 			Time("timestamp", event.Timestamp).
 			Str("id", event.ID).
-			Str("client", flow.client.name).
+			Str("triggerer", flow.triggerer).
 			Str("event_type", string(flow.eventType)).
 			Str("error", event.errorString()).
 			Msg("event flow failed to publish an event")
@@ -167,7 +168,7 @@ func (flow *EventFlow[T]) Publish(payload T, err error) error {
 	log.Info().
 		Time("timestamp", event.Timestamp).
 		Str("id", event.ID).
-		Str("client", flow.client.name).
+		Str("triggerer", flow.triggerer).
 		Str("event_type", string(flow.eventType)).
 		Str("error", event.errorString()).
 		Msg("event flow published an event")
