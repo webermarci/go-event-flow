@@ -21,7 +21,7 @@ type EventType string
 
 type Event[T any] struct {
 	ID        string    `json:"id"`
-	Timestamp time.Time `json:"timestamp"`
+	Timestamp int64     `json:"timestamp"`
 	EventType EventType `json:"event_type"`
 	Error     error     `json:"error"`
 	Triggerer string    `json:"triggerer"`
@@ -31,7 +31,7 @@ type Event[T any] struct {
 func NewEvent[T any](triggerer string, eventType EventType, payload T, err error) *Event[T] {
 	return &Event[T]{
 		ID:        ksuid.New().String(),
-		Timestamp: time.Now(),
+		Timestamp: time.Now().UnixMilli(),
 		EventType: eventType,
 		Error:     err,
 		Triggerer: triggerer,
@@ -84,7 +84,6 @@ func (flow *EventFlow[T]) Subscribe() error {
 		}
 
 		log.Info().
-			Time("timestamp", event.Timestamp).
 			Str("id", event.ID).
 			Str("triggerer", event.Triggerer).
 			Str("event_type", string(flow.EventType)).
@@ -137,7 +136,6 @@ func (flow *EventFlow[T]) Publish(triggerer string, payload T, err error) error 
 	if err != nil {
 		log.Error().
 			Err(err).
-			Time("timestamp", event.Timestamp).
 			Str("id", event.ID).
 			Str("triggerer", triggerer).
 			Msg("failed to marshal the event to json")
@@ -151,7 +149,6 @@ func (flow *EventFlow[T]) Publish(triggerer string, payload T, err error) error 
 	if token.Error() != nil {
 		log.Warn().
 			Err(token.Error()).
-			Time("timestamp", event.Timestamp).
 			Str("id", event.ID).
 			Str("triggerer", triggerer).
 			Str("event_type", string(flow.EventType)).
@@ -161,7 +158,6 @@ func (flow *EventFlow[T]) Publish(triggerer string, payload T, err error) error 
 	}
 
 	log.Info().
-		Time("timestamp", event.Timestamp).
 		Str("id", event.ID).
 		Str("triggerer", triggerer).
 		Str("event_type", string(flow.EventType)).
