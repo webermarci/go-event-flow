@@ -2,6 +2,7 @@ package eventFlow
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -10,6 +11,8 @@ import (
 func TestIsSuccessful(t *testing.T) {
 	var eventType EventType = "emq/test/" + EventType(t.Name())
 	e1 := NewEvent(t.Name(), eventType, 1, nil)
+
+	fmt.Println(e1.ID)
 
 	if e1.IsSuccessful() == false {
 		t.Fatal("expected true")

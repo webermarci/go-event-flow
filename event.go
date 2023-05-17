@@ -5,8 +5,8 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
+	"github.com/segmentio/ksuid"
 )
 
 type QoS byte
@@ -20,7 +20,7 @@ const (
 type EventType string
 
 type Event[T any] struct {
-	UUID      string    `json:"uuid"`
+	ID        string    `json:"id"`
 	Timestamp time.Time `json:"timestamp"`
 	EventType EventType `json:"event_type"`
 	Error     error     `json:"error"`
@@ -30,7 +30,7 @@ type Event[T any] struct {
 
 func NewEvent[T any](triggerer string, eventType EventType, payload T, err error) *Event[T] {
 	return &Event[T]{
-		UUID:      uuid.NewString(),
+		ID:        ksuid.New().String(),
 		Timestamp: time.Now(),
 		EventType: eventType,
 		Error:     err,
@@ -85,7 +85,7 @@ func (flow *EventFlow[T]) Subscribe() error {
 
 		log.Info().
 			Time("timestamp", event.Timestamp).
-			Str("uuid", event.UUID).
+			Str("id", event.ID).
 			Str("client", flow.client.name).
 			Str("event_type", string(flow.eventType)).
 			Msg("event flow received an event")
@@ -142,7 +142,7 @@ func (flow *EventFlow[T]) Publish(payload T, err error) error {
 		log.Error().
 			Err(err).
 			Time("timestamp", event.Timestamp).
-			Str("uuid", event.UUID).
+			Str("id", event.ID).
 			Str("client", flow.client.name).
 			Msg("failed to marshal the event to json")
 		return err
@@ -156,7 +156,7 @@ func (flow *EventFlow[T]) Publish(payload T, err error) error {
 		log.Warn().
 			Err(token.Error()).
 			Time("timestamp", event.Timestamp).
-			Str("uuid", event.UUID).
+			Str("id", event.ID).
 			Str("client", flow.client.name).
 			Str("event_type", string(flow.eventType)).
 			Str("error", event.errorString()).
@@ -166,7 +166,7 @@ func (flow *EventFlow[T]) Publish(payload T, err error) error {
 
 	log.Info().
 		Time("timestamp", event.Timestamp).
-		Str("uuid", event.UUID).
+		Str("id", event.ID).
 		Str("client", flow.client.name).
 		Str("event_type", string(flow.eventType)).
 		Str("error", event.errorString()).
