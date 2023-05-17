@@ -26,7 +26,7 @@ func TestIsSuccessful(t *testing.T) {
 }
 
 func TestSubscription(t *testing.T) {
-	client := NewClient(ClientConfig{
+	client := NewClient().Configure(ClientConfig{
 		URL: "tcp://test.mosquitto.org:1883",
 	})
 
@@ -52,7 +52,7 @@ func TestSubscription(t *testing.T) {
 }
 
 func TestSubscriptionWithoutConnection(t *testing.T) {
-	client := NewClient(ClientConfig{
+	client := NewClient().Configure(ClientConfig{
 		URL: "",
 	})
 
@@ -72,7 +72,7 @@ func TestSubscriptionWithoutConnection(t *testing.T) {
 }
 
 func TestUnsubscribtionWithoutConnection(t *testing.T) {
-	client := NewClient(ClientConfig{
+	client := NewClient().Configure(ClientConfig{
 		URL: "",
 	})
 
@@ -90,7 +90,7 @@ func TestUnsubscribtionWithoutConnection(t *testing.T) {
 }
 
 func TestPublishingSuccesful(t *testing.T) {
-	client := NewClient(ClientConfig{
+	client := NewClient().Configure(ClientConfig{
 		URL: "tcp://test.mosquitto.org:1883",
 	})
 
@@ -110,7 +110,7 @@ func TestPublishingSuccesful(t *testing.T) {
 }
 
 func TestPublishingFailed(t *testing.T) {
-	client := NewClient(ClientConfig{
+	client := NewClient().Configure(ClientConfig{
 		URL: "tcp://test.mosquitto.org:1883",
 	})
 
@@ -130,7 +130,7 @@ func TestPublishingFailed(t *testing.T) {
 }
 
 func TestPublishingWithoutConnection(t *testing.T) {
-	client := NewClient(ClientConfig{
+	client := NewClient().Configure(ClientConfig{
 		URL: "",
 	})
 
@@ -148,7 +148,7 @@ func TestPublishingWithoutConnection(t *testing.T) {
 }
 
 func TestListening(t *testing.T) {
-	client := NewClient(ClientConfig{
+	client := NewClient().Configure(ClientConfig{
 		URL: "tcp://test.mosquitto.org:1883",
 	})
 
@@ -200,7 +200,7 @@ func TestListening(t *testing.T) {
 }
 
 func TestPublishingInvalidStruct(t *testing.T) {
-	client := NewClient(ClientConfig{
+	client := NewClient().Configure(ClientConfig{
 		URL: "tcp://test.mosquitto.org:1883",
 	})
 

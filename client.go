@@ -18,7 +18,11 @@ type Client struct {
 	mqttClient mqtt.Client
 }
 
-func NewClient(config ClientConfig) *Client {
+func NewClient() *Client {
+	return &Client{}
+}
+
+func (c *Client) Configure(config ClientConfig) *Client {
 	mqttConfig := mqtt.NewClientOptions()
 	mqttConfig.SetKeepAlive(3 * time.Second)
 	mqttConfig.SetAutoReconnect(true)
@@ -46,11 +50,8 @@ func NewClient(config ClientConfig) *Client {
 		log.Info().Msg("mqtt client is connected")
 	})
 
-	mqttClient := mqtt.NewClient(mqttConfig)
-
-	return &Client{
-		mqttClient: mqttClient,
-	}
+	c.mqttClient = mqtt.NewClient(mqttConfig)
+	return c
 }
 
 func (client *Client) Connect() error {

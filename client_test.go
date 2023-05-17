@@ -5,7 +5,7 @@ import (
 )
 
 func TestClientConnect(t *testing.T) {
-	client := NewClient(ClientConfig{
+	client := NewClient().Configure(ClientConfig{
 		URL: "tcp://test.mosquitto.org:1883",
 	})
 
@@ -17,7 +17,7 @@ func TestClientConnect(t *testing.T) {
 }
 
 func TestClientFailedToConnect(t *testing.T) {
-	client := NewClient(ClientConfig{
+	client := NewClient().Configure(ClientConfig{
 		URL: "",
 	})
 
