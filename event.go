@@ -52,16 +52,16 @@ func (e *Event[T]) errorString() string {
 
 type EventFlow[T any] struct {
 	client    *Client
-	eventType EventType
-	qos       QoS
+	EventType EventType
+	QoS       QoS
 	callback  func(event Event[T])
 }
 
 func NewEventFlow[T any](client *Client, eventType EventType, qos QoS) *EventFlow[T] {
 	return &EventFlow[T]{
 		client:    client,
-		eventType: eventType,
-		qos:       qos,
+		EventType: eventType,
+		QoS:       qos,
 		callback:  func(event Event[T]) {},
 	}
 }
@@ -71,7 +71,7 @@ func (flow *EventFlow[T]) SetCallback(callback func(event Event[T])) {
 }
 
 func (flow *EventFlow[T]) Subscribe() error {
-	token := flow.client.mqttClient.Subscribe(string(flow.eventType), byte(flow.qos), func(c mqtt.Client, m mqtt.Message) {
+	token := flow.client.mqttClient.Subscribe(string(flow.EventType), byte(flow.QoS), func(c mqtt.Client, m mqtt.Message) {
 		var event Event[T]
 
 		err := json.Unmarshal(m.Payload(), &event)
@@ -87,7 +87,7 @@ func (flow *EventFlow[T]) Subscribe() error {
 			Time("timestamp", event.Timestamp).
 			Str("id", event.ID).
 			Str("triggerer", event.Triggerer).
-			Str("event_type", string(flow.eventType)).
+			Str("event_type", string(flow.EventType)).
 			Msg("event flow received an event")
 
 		flow.callback(event)
@@ -98,40 +98,40 @@ func (flow *EventFlow[T]) Subscribe() error {
 	if token.Error() != nil {
 		log.Warn().
 			Err(token.Error()).
-			Str("event_type", string(flow.eventType)).
+			Str("event_type", string(flow.EventType)).
 			Msg("event flow failed to subscribe")
 		return token.Error()
 	}
 
 	log.Info().
-		Str("event_type", string(flow.eventType)).
+		Str("event_type", string(flow.EventType)).
 		Msg("event flow subscribed")
 
 	return nil
 }
 
 func (flow *EventFlow[T]) Unsubscribe() error {
-	token := flow.client.mqttClient.Unsubscribe(string(flow.eventType))
+	token := flow.client.mqttClient.Unsubscribe(string(flow.EventType))
 
 	token.Wait()
 
 	if token.Error() != nil {
 		log.Warn().
 			Err(token.Error()).
-			Str("event_type", string(flow.eventType)).
+			Str("event_type", string(flow.EventType)).
 			Msg("event flow failed to unsubscribe")
 		return token.Error()
 	}
 
 	log.Info().
-		Str("event_type", string(flow.eventType)).
+		Str("event_type", string(flow.EventType)).
 		Msg("event flow unsubscribed")
 
 	return nil
 }
 
 func (flow *EventFlow[T]) Publish(triggerer string, payload T, err error) error {
-	event := NewEvent(triggerer, flow.eventType, payload, err)
+	event := NewEvent(triggerer, flow.EventType, payload, err)
 
 	bytes, err := json.Marshal(event)
 	if err != nil {
@@ -144,7 +144,7 @@ func (flow *EventFlow[T]) Publish(triggerer string, payload T, err error) error 
 		return err
 	}
 
-	token := flow.client.mqttClient.Publish(string(flow.eventType), byte(flow.qos), false, bytes)
+	token := flow.client.mqttClient.Publish(string(flow.EventType), byte(flow.QoS), false, bytes)
 
 	token.Wait()
 
@@ -154,7 +154,7 @@ func (flow *EventFlow[T]) Publish(triggerer string, payload T, err error) error 
 			Time("timestamp", event.Timestamp).
 			Str("id", event.ID).
 			Str("triggerer", triggerer).
-			Str("event_type", string(flow.eventType)).
+			Str("event_type", string(flow.EventType)).
 			Str("error", event.errorString()).
 			Msg("event flow failed to publish an event")
 		return token.Error()
@@ -164,7 +164,7 @@ func (flow *EventFlow[T]) Publish(triggerer string, payload T, err error) error 
 		Time("timestamp", event.Timestamp).
 		Str("id", event.ID).
 		Str("triggerer", triggerer).
-		Str("event_type", string(flow.eventType)).
+		Str("event_type", string(flow.EventType)).
 		Str("error", event.errorString()).
 		Msg("event flow published an event")
 
