@@ -1,29 +1,10 @@
 package eventFlow
 
 import (
-	"errors"
-	"fmt"
 	"sync"
 	"testing"
 	"time"
 )
-
-func TestIsSuccessful(t *testing.T) {
-	var eventType EventType = "emq/test/" + EventType(t.Name())
-	e1 := NewEvent(t.Name(), eventType, 1, nil)
-
-	fmt.Println(e1.ID)
-
-	if e1.IsSuccessful() == false {
-		t.Fatal("expected true")
-	}
-
-	e2 := NewEvent(t.Name(), eventType, 1, errors.New(t.Name()))
-
-	if e2.IsSuccessful() == true {
-		t.Fatal("expected false")
-	}
-}
 
 func TestSubscription(t *testing.T) {
 	client := NewClient().Configure(ClientConfig{
@@ -104,7 +85,7 @@ func TestPublishingSuccesful(t *testing.T) {
 
 	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
 
-	if err := flow.Publish(t.Name(), 42, nil); err != nil {
+	if err := flow.Publish(t.Name(), 42); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -124,7 +105,7 @@ func TestPublishingFailed(t *testing.T) {
 
 	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
 
-	if err := flow.Publish(t.Name(), 42, errors.New(t.Name())); err != nil {
+	if err := flow.Publish(t.Name(), 42); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -142,7 +123,7 @@ func TestPublishingWithoutConnection(t *testing.T) {
 
 	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
 
-	if err := flow.Publish(t.Name(), 42, nil); err == nil {
+	if err := flow.Publish(t.Name(), 42); err == nil {
 		t.Fatal("error expected")
 	}
 }
@@ -180,7 +161,7 @@ func TestListening(t *testing.T) {
 	}()
 
 	go func() {
-		if err := flow.Publish(t.Name(), 42, nil); err != nil {
+		if err := flow.Publish(t.Name(), 42); err != nil {
 			t.Fail()
 		}
 	}()
@@ -218,7 +199,7 @@ func TestPublishingInvalidStruct(t *testing.T) {
 
 	flow := NewEventFlow[Invalid](client, eventType, AtLeastOnce)
 
-	if err := flow.Publish(t.Name(), Invalid{Channel: make(chan int)}, nil); err == nil {
+	if err := flow.Publish(t.Name(), Invalid{Channel: make(chan int)}); err == nil {
 		t.Fatal("expected error")
 	}
 }

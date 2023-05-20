@@ -2,11 +2,11 @@ package eventFlow
 
 import (
 	"encoding/json"
+	"math/rand"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/rs/zerolog/log"
-	"github.com/segmentio/ksuid"
 )
 
 type QoS byte
@@ -20,34 +20,23 @@ const (
 type EventType string
 
 type Event[T any] struct {
-	ID        string    `json:"id"`
+	ID        int64     `json:"id"`
 	Timestamp int64     `json:"timestamp"`
 	EventType EventType `json:"event_type"`
-	Error     error     `json:"error"`
 	Triggerer string    `json:"triggerer"`
 	Payload   T         `json:"payload"`
 }
 
-func NewEvent[T any](triggerer string, eventType EventType, payload T, err error) *Event[T] {
+func NewEvent[T any](triggerer string, eventType EventType, payload T) *Event[T] {
+	ts := time.Now().UnixMilli()
+	id := ts*1000 + int64(rand.Intn(9999-1000)+1000)
 	return &Event[T]{
-		ID:        ksuid.New().String(),
-		Timestamp: time.Now().UnixMilli(),
+		ID:        id,
+		Timestamp: ts,
 		EventType: eventType,
-		Error:     err,
 		Triggerer: triggerer,
 		Payload:   payload,
 	}
-}
-
-func (e *Event[T]) IsSuccessful() bool {
-	return e.Error == nil
-}
-
-func (e *Event[T]) errorString() string {
-	if e.Error == nil {
-		return ""
-	}
-	return e.Error.Error()
 }
 
 type EventFlow[T any] struct {
@@ -84,7 +73,7 @@ func (flow *EventFlow[T]) Subscribe() error {
 		}
 
 		log.Info().
-			Str("id", event.ID).
+			Int64("id", event.ID).
 			Str("triggerer", event.Triggerer).
 			Str("event_type", string(flow.EventType)).
 			Msg("event flow received an event")
@@ -129,14 +118,14 @@ func (flow *EventFlow[T]) Unsubscribe() error {
 	return nil
 }
 
-func (flow *EventFlow[T]) Publish(triggerer string, payload T, err error) error {
-	event := NewEvent(triggerer, flow.EventType, payload, err)
+func (flow *EventFlow[T]) Publish(triggerer string, payload T) error {
+	event := NewEvent(triggerer, flow.EventType, payload)
 
 	bytes, err := json.Marshal(event)
 	if err != nil {
 		log.Error().
 			Err(err).
-			Str("id", event.ID).
+			Int64("id", event.ID).
 			Str("triggerer", triggerer).
 			Msg("failed to marshal the event to json")
 		return err
@@ -149,19 +138,17 @@ func (flow *EventFlow[T]) Publish(triggerer string, payload T, err error) error 
 	if token.Error() != nil {
 		log.Warn().
 			Err(token.Error()).
-			Str("id", event.ID).
+			Int64("id", event.ID).
 			Str("triggerer", triggerer).
 			Str("event_type", string(flow.EventType)).
-			Str("error", event.errorString()).
 			Msg("event flow failed to publish an event")
 		return token.Error()
 	}
 
 	log.Info().
-		Str("id", event.ID).
+		Int64("id", event.ID).
 		Str("triggerer", triggerer).
 		Str("event_type", string(flow.EventType)).
-		Str("error", event.errorString()).
 		Msg("event flow published an event")
 
 	return nil
