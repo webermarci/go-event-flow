@@ -1,4 +1,4 @@
-package eventFlow
+package flow
 
 import (
 	"time"
