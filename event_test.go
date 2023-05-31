@@ -19,7 +19,7 @@ func TestSubscription(t *testing.T) {
 
 	var eventType EventType = "emq/test/" + EventType(t.Name())
 
-	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
+	flow := NewEventFlow[int](client, eventType)
 
 	flow.SetCallback(func(event Event[int]) {})
 
@@ -43,7 +43,7 @@ func TestSubscriptionWithoutConnection(t *testing.T) {
 
 	var eventType EventType = "emq/test/" + EventType(t.Name())
 
-	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
+	flow := NewEventFlow[int](client, eventType)
 
 	flow.SetCallback(func(event Event[int]) {})
 
@@ -63,7 +63,7 @@ func TestUnsubscribtionWithoutConnection(t *testing.T) {
 
 	var eventType EventType = "emq/test/" + EventType(t.Name())
 
-	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
+	flow := NewEventFlow[int](client, eventType)
 
 	if err := flow.Unsubscribe(); err == nil {
 		t.Fatal("expected error")
@@ -83,7 +83,7 @@ func TestPublishingSuccesful(t *testing.T) {
 
 	var eventType EventType = "emq/test/" + EventType(t.Name())
 
-	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
+	flow := NewEventFlow[int](client, eventType)
 
 	if err := flow.Publish(t.Name(), 42); err != nil {
 		t.Fatal(err)
@@ -103,7 +103,7 @@ func TestPublishingFailed(t *testing.T) {
 
 	var eventType EventType = "emq/test/" + EventType(t.Name())
 
-	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
+	flow := NewEventFlow[int](client, eventType)
 
 	if err := flow.Publish(t.Name(), 42); err != nil {
 		t.Fatal(err)
@@ -121,7 +121,7 @@ func TestPublishingWithoutConnection(t *testing.T) {
 
 	var eventType EventType = "emq/test/" + EventType(t.Name())
 
-	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
+	flow := NewEventFlow[int](client, eventType)
 
 	if err := flow.Publish(t.Name(), 42); err == nil {
 		t.Fatal("error expected")
@@ -144,7 +144,7 @@ func TestListening(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 
-	flow := NewEventFlow[int](client, eventType, AtLeastOnce)
+	flow := NewEventFlow[int](client, eventType)
 
 	flow.SetCallback(func(event Event[int]) {
 		wg.Done()
@@ -197,7 +197,7 @@ func TestPublishingInvalidStruct(t *testing.T) {
 		Channel chan int `json:"channel"`
 	}
 
-	flow := NewEventFlow[Invalid](client, eventType, AtLeastOnce)
+	flow := NewEventFlow[Invalid](client, eventType)
 
 	if err := flow.Publish(t.Name(), Invalid{Channel: make(chan int)}); err == nil {
 		t.Fatal("expected error")

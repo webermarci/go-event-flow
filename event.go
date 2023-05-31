@@ -9,14 +9,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type QoS byte
-
-const (
-	AtMostOnce  QoS = 0
-	AtLeastOnce QoS = 1
-	ExactlyOnce QoS = 2
-)
-
 type EventType string
 
 type Event[T any] struct {
@@ -42,15 +34,13 @@ func NewEvent[T any](triggerer string, eventType EventType, payload T) *Event[T]
 type EventFlow[T any] struct {
 	client    *Client
 	EventType EventType
-	QoS       QoS
 	callback  func(event Event[T])
 }
 
-func NewEventFlow[T any](client *Client, eventType EventType, qos QoS) *EventFlow[T] {
+func NewEventFlow[T any](client *Client, eventType EventType) *EventFlow[T] {
 	return &EventFlow[T]{
 		client:    client,
 		EventType: eventType,
-		QoS:       qos,
 		callback:  func(event Event[T]) {},
 	}
 }
@@ -60,7 +50,7 @@ func (flow *EventFlow[T]) SetCallback(callback func(event Event[T])) {
 }
 
 func (flow *EventFlow[T]) Subscribe() error {
-	token := flow.client.mqttClient.Subscribe(string(flow.EventType), byte(flow.QoS), func(c mqtt.Client, m mqtt.Message) {
+	token := flow.client.mqttClient.Subscribe(string(flow.EventType), 1, func(c mqtt.Client, m mqtt.Message) {
 		var event Event[T]
 
 		err := json.Unmarshal(m.Payload(), &event)
@@ -131,7 +121,7 @@ func (flow *EventFlow[T]) Publish(triggerer string, payload T) error {
 		return err
 	}
 
-	token := flow.client.mqttClient.Publish(string(flow.EventType), byte(flow.QoS), false, bytes)
+	token := flow.client.mqttClient.Publish(string(flow.EventType), 1, false, bytes)
 
 	token.Wait()
 
