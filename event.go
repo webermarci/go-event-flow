@@ -2,17 +2,17 @@ package flow
 
 import (
 	"encoding/json"
-	"math/rand"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
 type EventType string
 
 type Event[T any] struct {
-	Id        int64     `json:"id"`
+	Id        string    `json:"id"`
 	Timestamp int64     `json:"timestamp"`
 	EventType EventType `json:"event_type"`
 	Triggerer string    `json:"triggerer"`
@@ -20,10 +20,8 @@ type Event[T any] struct {
 }
 
 func NewEvent[T any](triggerer string, eventType EventType, payload T) *Event[T] {
-	ts := time.Now().UnixMilli()
-	id := ts*1000 + int64(rand.Intn(999-100)+100)
 	return &Event[T]{
-		Id:        id,
+		Id:        uuid.NewString(),
 		Timestamp: time.Now().UnixMilli(),
 		EventType: eventType,
 		Triggerer: triggerer,
@@ -63,7 +61,7 @@ func (flow *EventFlow[T]) Subscribe() error {
 		}
 
 		log.Info().
-			Int64("id", event.Id).
+			Str("id", event.Id).
 			Str("triggerer", event.Triggerer).
 			Str("event_type", string(flow.EventType)).
 			Msg("event flow received an event")
@@ -115,7 +113,7 @@ func (flow *EventFlow[T]) Publish(triggerer string, payload T) error {
 	if err != nil {
 		log.Error().
 			Err(err).
-			Int64("id", event.Id).
+			Str("id", event.Id).
 			Str("triggerer", triggerer).
 			Msg("failed to marshal the event to json")
 		return err
@@ -128,7 +126,7 @@ func (flow *EventFlow[T]) Publish(triggerer string, payload T) error {
 	if token.Error() != nil {
 		log.Warn().
 			Err(token.Error()).
-			Int64("id", event.Id).
+			Str("id", event.Id).
 			Str("triggerer", triggerer).
 			Str("event_type", string(flow.EventType)).
 			Msg("event flow failed to publish an event")
@@ -136,7 +134,7 @@ func (flow *EventFlow[T]) Publish(triggerer string, payload T) error {
 	}
 
 	log.Info().
-		Int64("id", event.Id).
+		Str("id", event.Id).
 		Str("triggerer", triggerer).
 		Str("event_type", string(flow.EventType)).
 		Msg("event flow published an event")
