@@ -106,7 +106,7 @@ func (flow *EventFlow[T]) Unsubscribe() error {
 	return nil
 }
 
-func (flow *EventFlow[T]) Publish(triggerer string, payload T) error {
+func (flow *EventFlow[T]) Publish(triggerer string, payload T) (*Event[T], error) {
 	event := NewEvent(triggerer, flow.EventType, payload)
 
 	bytes, err := json.Marshal(event)
@@ -116,7 +116,7 @@ func (flow *EventFlow[T]) Publish(triggerer string, payload T) error {
 			Str("id", event.Id).
 			Str("triggerer", triggerer).
 			Msg("failed to marshal the event to json")
-		return err
+		return nil, err
 	}
 
 	token := flow.client.mqttClient.Publish(string(flow.EventType), 1, false, bytes)
@@ -130,7 +130,7 @@ func (flow *EventFlow[T]) Publish(triggerer string, payload T) error {
 			Str("triggerer", triggerer).
 			Str("event_type", string(flow.EventType)).
 			Msg("event flow failed to publish an event")
-		return token.Error()
+		return nil, token.Error()
 	}
 
 	log.Info().
@@ -139,5 +139,5 @@ func (flow *EventFlow[T]) Publish(triggerer string, payload T) error {
 		Str("event_type", string(flow.EventType)).
 		Msg("event flow published an event")
 
-	return nil
+	return event, nil
 }

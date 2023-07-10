@@ -85,7 +85,7 @@ func TestPublishingSuccesful(t *testing.T) {
 
 	flow := NewEventFlow[int](client, eventType)
 
-	if err := flow.Publish(t.Name(), 42); err != nil {
+	if _, err := flow.Publish(t.Name(), 42); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -105,7 +105,7 @@ func TestPublishingFailed(t *testing.T) {
 
 	flow := NewEventFlow[int](client, eventType)
 
-	if err := flow.Publish(t.Name(), 42); err != nil {
+	if _, err := flow.Publish(t.Name(), 42); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -123,7 +123,7 @@ func TestPublishingWithoutConnection(t *testing.T) {
 
 	flow := NewEventFlow[int](client, eventType)
 
-	if err := flow.Publish(t.Name(), 42); err == nil {
+	if _, err := flow.Publish(t.Name(), 42); err == nil {
 		t.Fatal("error expected")
 	}
 }
@@ -161,7 +161,7 @@ func TestListening(t *testing.T) {
 	}()
 
 	go func() {
-		if err := flow.Publish(t.Name(), 42); err != nil {
+		if _, err := flow.Publish(t.Name(), 42); err != nil {
 			t.Fail()
 		}
 	}()
@@ -199,7 +199,7 @@ func TestPublishingInvalidStruct(t *testing.T) {
 
 	flow := NewEventFlow[Invalid](client, eventType)
 
-	if err := flow.Publish(t.Name(), Invalid{Channel: make(chan int)}); err == nil {
+	if _, err := flow.Publish(t.Name(), Invalid{Channel: make(chan int)}); err == nil {
 		t.Fatal("expected error")
 	}
 }
